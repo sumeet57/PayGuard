@@ -4,6 +4,7 @@ export interface PayGuardConfig {
     keySecret: string;
   };
   policy?: PolicyConfig;
+  storage: StorageConfig;
   ai?: AIProvider;
 }
 
@@ -11,6 +12,18 @@ export interface PolicyConfig {
   maxTransactionAmount?: number;
   dailySpendingLimit?: number;
   requireApprovalAbove?: number;
+}
+
+export interface StorageConfig {
+  database : 'mongodb' | 'postgresql' | 'mysql';
+  connectionString: string;
+  collectionName: string;
+}
+export interface StorageAdapter {
+  connect(): Promise<void>;
+  saveTransaction(data: any): Promise<void>;
+  getRecentTransactions(agentId: string, limit?: number): Promise<any[]>;
+  
 }
 
 export interface AIProvider {

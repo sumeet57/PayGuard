@@ -1,0 +1,27 @@
+{
+  "name": "payguard",
+  "version": "1.0.0",
+  "description": "> **PayGuard lets autonomous AI agents interact with payment\r > infrastructure safely by separating payment authority, deterministic\r > policy enforcement, and AI reasoning.**",
+  "homepage": "https://github.com/sumeet57/PayGuard#readme",
+  "bugs": {
+    "url": "https://github.com/sumeet57/PayGuard/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sumeet57/PayGuard.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "mongoose": "^9.9.4",
+    "typescript": "^7.0.2"
+  }
+}

@@ -14,18 +14,45 @@ export class AgentManager {
     const transactionId = `pg_txn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     const policyDecision = this.payguard.policyEngine.evaluate(this.config.policy, request);
+    const storage = this.payguard.storageConfig;
+    if(storage) {
+      await storage.connect();
+    };
 
     if (policyDecision === "BLOCK") {
+      if(storage) {
+        await storage.saveTransaction({
+          transactionId,
+          agentId: this.config.id,
+          amount: request.amount,
+          status: "BLOCKED",
+          decision: "BLOCK",
+          reason: "Transaction exceeded deterministic policy limits."
+        })
+      }
+
       return {
         decision: "BLOCK",
         transactionId,
         status: "BLOCKED",
         reason: "Transaction exceeded deterministic policy limits."
       };
+      
     }
 
     if (policyDecision === "REQUIRE_APPROVAL") {
       const approvalId = `apr_${Date.now()}`;
+      if(storage) {
+        await storage.saveTransaction({
+          transactionId,
+          approvalId,
+          agentId: this.config.id,
+          amount: request.amount,
+          status: "WAITING_FOR_APPROVAL",
+          decision: "REQUIRE_APPROVAL",
+          reason: "Transaction exceeds autonomous spending threshold."
+        })
+      }
       return {
         decision: "REQUIRE_APPROVAL",
         transactionId,
@@ -47,6 +74,16 @@ export class AgentManager {
       const aiResult = await this.payguard.aiProvider.investigate(context);
 
       if (aiResult.recommendation === "BLOCK") {
+        if(storage) {
+          await storage.saveTransaction({
+            transactionId,
+            agentId: this.config.id,
+            amount: request.amount,
+            status: "BLOCKED",
+            decision: "BLOCK",
+            reason: "AI investigation flagged transaction as severe behavioral anomaly."
+          })
+        }
         return {
           decision: "BLOCK",
           transactionId,
@@ -57,6 +94,17 @@ export class AgentManager {
 
       if (aiResult.recommendation === "REQUIRE_APPROVAL") {
         const approvalId = `apr_${Date.now()}`;
+        if(storage) {
+          await storage.saveTransaction({
+            transactionId,
+            approvalId,
+            agentId: this.config.id,
+            amount: request.amount,
+            status: "WAITING_FOR_APPROVAL",
+            decision: "REQUIRE_APPROVAL",
+            reason: "AI investigation flagged ambiguous behavior requiring human review."
+          })
+        }
         return {
           decision: "REQUIRE_APPROVAL",
           transactionId,
@@ -65,6 +113,16 @@ export class AgentManager {
           reason: "AI investigation flagged ambiguous behavior requiring human review."
         };
       }
+    }
+
+    if(storage) {
+      await storage.saveTransaction({
+        transactionId,
+        agentId: this.config.id,
+        amount: request.amount,
+        status: "EXECUTING",
+        decision: "ALLOW"
+      })
     }
 
     return {
