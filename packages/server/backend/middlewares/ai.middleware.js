@@ -1,4 +1,4 @@
-import Key from "../models/key.model";
+import Key from "../models/key.model.js";
 
 export const isValidRequest = async (req, res, next) => {
     const {apiKey} = req.headers;
