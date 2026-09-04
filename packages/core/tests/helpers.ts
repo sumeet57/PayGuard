@@ -9,11 +9,17 @@ export function createMockStorage(): StorageAdapter & {
   connect: ReturnType<typeof vi.fn>;
   saveTransaction: ReturnType<typeof vi.fn>;
   getRecentTransactions: ReturnType<typeof vi.fn>;
+  getPendingApprovals: ReturnType<typeof vi.fn>;
+  updateTransactionByApprovalId: ReturnType<typeof vi.fn>;
+  updateTransactionByOrderId: ReturnType<typeof vi.fn>;
 } {
   return {
     connect: vi.fn().mockResolvedValue(undefined),
     saveTransaction: vi.fn().mockResolvedValue(undefined),
     getRecentTransactions: vi.fn().mockResolvedValue([]),
+    getPendingApprovals: vi.fn().mockResolvedValue([]),
+    updateTransactionByApprovalId: vi.fn().mockResolvedValue({}),
+    updateTransactionByOrderId: vi.fn().mockResolvedValue({}),
   };
 }
 

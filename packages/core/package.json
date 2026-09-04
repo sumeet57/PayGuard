@@ -1,5 +1,5 @@
 {
-  "name": "payguard-core",
+  "name": "payguard",
   "version": "0.1.0",
   "description": "Policy-driven payment guardrails for autonomous AI agents.",
   "license": "MIT",
@@ -39,7 +39,9 @@
   ],
   "dependencies": {
     "mongoose": "^8.5.0",
-    "razorpay": "^2.9.8"
+    "razorpay": "^2.9.8",
+    "axios" : "^1.6.6",
+    "openai": "^4.34.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

@@ -23,13 +23,10 @@ export interface StorageAdapter {
   connect(): Promise<void>;
   saveTransaction(data: any): Promise<void>;
   getRecentTransactions(agentId: string, limit?: number): Promise<any[]>;
-  
+  getPendingApprovals(): Promise<any[]>;
+  updateTransactionByApprovalId(approvalId: string, status: string, reason?: string): Promise<any>;
+  updateTransactionByOrderId(orderId: string, status: string): Promise<any>;
 }
-
-export interface AIProvider {
-  investigate(context: InvestigationContext): Promise<InvestigationResult>;
-}
-
 export interface InvestigationContext {
   agentId: string;
   amount: number;
@@ -43,6 +40,13 @@ export interface InvestigationResult {
   confidence: number;
   recommendation: "ALLOW" | "REQUIRE_APPROVAL" | "BLOCK";
 }
+
+// Clean Interface: No constructor hacks inside interface
+export interface AIProvider {
+  investigate(context: InvestigationContext): Promise<InvestigationResult>;
+}
+
+
 
 export interface AgentConfig {
   id: string;

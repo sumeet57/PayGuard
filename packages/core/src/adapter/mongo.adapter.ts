@@ -24,4 +24,22 @@ export class MongoAdapter implements StorageAdapter {
     async getRecentTransactions(agentId: string, limit: 5): Promise<any[]> {
         return await MongoTransaction.find({ agentId }).sort({ createdAt: -1 }).limit(limit).exec();
     };
+    async getPendingApprovals(): Promise<any[]> {
+        return await MongoTransaction.find({ status: "WAITING_FOR_APPROVAL" }).exec();
+    }
+    async updateTransactionByApprovalId(approvalId: string, status: string, reason?: string): Promise<any> {
+        return await MongoTransaction.findOneAndUpdate(
+            { approvalId },
+            { status, reason },
+            { new: true }
+        ).exec();
+    }
+    async updateTransactionByOrderId(orderId: string, status: string): Promise<any> {
+        return await MongoTransaction.findOneAndUpdate(
+            { orderId },
+            { status },
+            { new: true }
+        ).exec();
+    }
+
 }

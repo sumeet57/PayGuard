@@ -2,15 +2,11 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["src/index.ts"],
-  format: ["esm", "cjs"],
+  format: ["cjs", "esm"],
   dts: true,
-  sourcemap: true,
   clean: true,
-  splitting: false,
-  minify: false,
-  treeshake: true,
-  target: "es2020",
-  outExtension({ format }) {
-    return { js: format === "cjs" ? ".cjs" : ".js" };
-  },
+  target: "node18",
+  platform: "node",
+  bundle: true,
+  skipNodeModulesBundle: true, // DO NOT bundle axios, form-data, or razorpay into dist
 });
