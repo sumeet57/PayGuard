@@ -8,6 +8,7 @@ import keyRouter from "./routes/key.route.js";
 import aiRouter from "./routes/ai.route.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // middlewares
 app.use(cors({ origin: env.clientUrl, credentials: true }));

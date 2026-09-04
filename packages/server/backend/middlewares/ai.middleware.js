@@ -1,7 +1,7 @@
 import Key from "../models/key.model.js";
 
 export const isValidRequest = async (req, res, next) => {
-    const {apiKey} = req.headers;
+    const apiKey = req.headers['apikey'] || req.headers['x-api-key'];
     if (!apiKey) {
         return res.status(400).json({error: "API key is required"});
     }else{
