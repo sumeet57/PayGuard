@@ -38,7 +38,8 @@
     "guardrails"
   ],
   "dependencies": {
-    "mongoose": "^8.5.0"
+    "mongoose": "^8.5.0",
+    "razorpay": "^2.9.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

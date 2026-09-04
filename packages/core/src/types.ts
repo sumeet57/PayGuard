@@ -60,6 +60,6 @@ export interface PaymentRequest {
 }
 
 export type PaymentResult = 
-  | { decision: "ALLOW"; transactionId: string; status: string }
+  | { decision: "ALLOW"; transactionId: string; status: string, reason?: string, orderId?: string }
   | { decision: "REQUIRE_APPROVAL"; transactionId: string; approvalId: string; status: string; reason: string }
   | { decision: "BLOCK"; transactionId: string; status: string; reason: string };
