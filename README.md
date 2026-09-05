@@ -43,7 +43,7 @@ PayGuard allows developers to plug in their preferred intelligence model without
     (Deterministic)   (OpenAI/Gemini/etc)   (PayGuard Server)
 ```
 
-1. **Mode 1 — No AI:** Runs purely on deterministic rules[cite: 1]. Ideal for strict, low-latency, or offline environments.
+1. **Mode 1 — No AI:** Runs purely on deterministic rules. Ideal for strict, low-latency, or offline environments.
 2. **Mode 2 — Developer-Owned AI (BYO-AI):** Pass your own API keys (OpenAI, Gemini, Anthropic) directly into the SDK.
 3. **Mode 3 — PayGuard Intelligence:** Uses PayGuard's remote proxy service to handle contextual risk analysis.
 
@@ -93,7 +93,6 @@ const payguard = new PayGuard({
   },
   ai: new PayGuardAIProvider({
     apiKey: process.env.PAYGUARD_API_KEY!,
-    endpoint: "https://payguard-server-460009295734.asia-south1.run.app"
   }),
 });
 
@@ -110,7 +109,7 @@ Register your agent's identity and initiate payment requests.
 const shoppingAgent = await payguard.agent({
   id: "shopping-agent-01",
   name: "Autonomous E-Commerce Agent",
-  capabilities: ["e-commerce", "procurement"],
+  capabilities: ["e-commerce", "procurement", "payment"],
 });
 
 // Execute Secured Payment Intent
@@ -137,10 +136,10 @@ Query and process transactions flagged under `REQUIRE_APPROVAL`.
 const pendingList = await payguard.approvals.listPending();
 
 // 2. Approve transaction -> Unlocks execution
-await payguard.approvals.approve("apr_1788564406531", "Verified legitimate purchase");
+await payguard.approvals.approve("apr_1788564406531");
 
 // 3. Reject transaction -> Halts execution
-await payguard.approvals.reject("apr_1788564406531", "Unauthorized purchase request");
+await payguard.approvals.reject("apr_1788564406531");
 
 ```
 
