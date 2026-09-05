@@ -5,7 +5,67 @@ import { FiPlus, FiTrash2, FiCopy, FiCheckCircle, FiBook, FiLogOut } from 'react
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
 import { keyAPI } from '../../api/services'
-import { Button, Input, Spinner, EmptyState } from '../../components/common/UI'
+
+/* =============================================================
+   LOCAL INLINE UI COMPONENTS (No external UI imports)
+============================================================= */
+
+function Spinner({ size = 20 }) {
+  return (
+    <div
+      className="inline-block animate-spin rounded-full border-2 border-current border-t-transparent text-accent"
+      style={{ width: size, height: size }}
+      role="status"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
+  )
+}
+
+function Button({ children, loading, disabled, variant = 'primary', size = 'md', className = '', ...props }) {
+  const baseStyle = "font-mono font-bold rounded-xl transition-all inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+  const sizeStyle = size === 'sm' ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm"
+  const variantStyle = variant === 'outline'
+    ? "border border-surface text-primary hover:bg-surface-alt"
+    : "bg-orange-500 hover:bg-orange-600 text-white"
+
+  return (
+    <button
+      disabled={disabled || loading}
+      className={`${baseStyle} ${sizeStyle} ${variantStyle} ${className}`}
+      {...props}
+    >
+      {loading ? <Spinner size={16} /> : children}
+    </button>
+  )
+}
+
+function Input({ label, error, className = '', ...props }) {
+  return (
+    <div className="w-full space-y-1.5">
+      {label && <label className="block text-xs font-mono font-semibold text-muted">{label}</label>}
+      <input
+        className={`w-full px-4 py-2.5 rounded-xl bg-surface-alt border border-surface text-primary text-sm font-mono focus:outline-none focus:border-accent transition-all ${className}`}
+        {...props}
+      />
+      {error && <p className="text-xs text-red-400 font-mono">{error}</p>}
+    </div>
+  )
+}
+
+function EmptyState({ icon, title, description }) {
+  return (
+    <div className="text-center py-12 px-4 bg-card border border-surface rounded-2xl">
+      <div className="text-3xl mb-2">{icon}</div>
+      <h3 className="text-sm font-bold text-primary font-mono">{title}</h3>
+      <p className="text-xs text-muted font-mono mt-1">{description}</p>
+    </div>
+  )
+}
+
+/* =============================================================
+   MAIN DASHBOARD PAGE
+============================================================= */
 
 export function DashboardPages() {
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
@@ -88,7 +148,11 @@ export function DashboardPages() {
   }
 
   if (!isAuthenticated) {
-    window.location.href = '/auth'
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted font-mono">Please log in to access the dashboard.</p>
+      </div>
+    )
   }
 
   return (
