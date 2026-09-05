@@ -1,9 +1,23 @@
-# PayGuard Documentation
+
+# PayGuard
 
 > **Agentic Payment Security & Orchestration Runtime for Razorpay**
 
 PayGuard is an open-source security runtime layer that enables autonomous AI agents to execute transactions on Razorpay safely. It enforces agent identity, deterministic spending policies, behavioral anomaly analysis, human-in-the-loop approvals, idempotency locks, and automated background reconciliation.
 
+---
+
+## 📂 Repository Monorepo Structure
+
+```text
+packages/
+├── core/       # PayGuard SDK (@payguard/core) - Published npm package containing policies, idempotency, & gateway connectors.
+├── example/    # Interactive Demo Application (Live Playground). Contains both frontend & backend demo code.
+└── server/     # Production Platform Infrastructure deployed on Google Cloud Run.
+                ├── Backend: Managed LLM proxy service for Mode 3 (PayGuard Intelligence), user auth, & API key management.
+                └── Frontend: Official documentation portal & Developer Dashboard for managing API keys.
+
+```
 ---
 
 ## 💡 Core Philosophy
@@ -105,6 +119,7 @@ const payguard = new PayGuard({
   // Optional: Omit this field to run Mode 1 (No AI)
   ai: new PayGuardAIProvider({
     apiKey: process.env.PAYGUARD_API_KEY!,
+    endpoint: process.env.PAYGUARD_ENDPOINT, // Optional custom remote endpoint
   }),
 });
 

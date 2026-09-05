@@ -1,40 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
-  FiArrowRight,
-  FiGithub,
   FiShield,
-  FiLock,
-  FiActivity,
-  FiCode,
+  FiGithub,
   FiTerminal,
-  FiCpu,
   FiCopy,
   FiCheck,
+  FiExternalLink,
   FiMenu,
   FiX,
-  FiLayers,
-  FiExternalLink,
   FiCheckCircle,
   FiClock,
   FiXCircle,
-  FiRefreshCw,
+  FiStar,
+  FiUser,
+  FiKey,
 } from "react-icons/fi";
 
-import { BsRobot, BsCreditCard2Front } from "react-icons/bs";
-
-/* =============================================================
-   DOCUMENTATION NAVIGATION DATA
-============================================================= */
-
 const PLAYGROUND_URL = "https://payguardplayground.sumeet.app";
+const GITHUB_URL = "https://github.com/sumeet57/PayGuard";
+const PORTFOLIO_URL = "https://sumeet.app";
 
 const docSections = [
   {
     title: "Getting Started",
     links: [
       { label: "Overview", href: "#overview" },
+      { label: "Get API Key", href: "#get-api-key" },
       { label: "Quick Start", href: "#quick-start" },
       { label: "Architecture", href: "#architecture" },
     ],
@@ -59,7 +52,7 @@ const docSections = [
 
 const codeExamples = {
   install: `npm install payguard`,
-  init: `import { PayGuard } from "payguard";
+  init: `import { PayGuard, PayGuardAIProvider } from "payguard";
 
 const payguard = new PayGuard({
   razorpay: {
@@ -67,87 +60,83 @@ const payguard = new PayGuard({
     keySecret: process.env.RAZORPAY_KEY_SECRET,
   },
   storage: {
-    database: "mongodb",
+    database: "mongodb", // Currently active: MongoDB
     connectionString: process.env.MONGO_URI,
-    collectionName: "payguard_transactions",
+    collectionName: "payguard_transactions", // Optional (Defaults to "payguard_transactions")
   },
   policy: {
-    maxTransactionAmount: 25000,
-    requireApprovalAbove: 15000,
-    allowedMerchants: ["merchant_prod_1", "merchant_prod_2"],
-    allowedCurrencies: ["INR"],
+    maxTransactionAmount: 30000,   // Hard block for amounts > ₹30,000
+    requireApprovalAbove: 10000,   // Triggers human review for amounts > ₹10,000
   },
-});
-
-const agent = await payguard.agent({
-  id: "shopping-agent-1",
-  name: "Autonomous Purchasing Agent",
-  capabilities: ["shopping", "payment"],
-});
-
-const result = await agent.pay({
-  amount: 2000,
-  currency: "INR",
-  merchant: { id: "merchant_prod_1" },
-  reason: "Procurement of cloud server credits",
-  idempotencyKey: "txn_ord_994827",
-});`,
-  webhook: `// Express.js Webhook Handler
-app.post("/webhooks/payguard", express.raw({ type: "application/json" }), (req, res) => {
-  const signature = req.headers["x-payguard-signature"];
-  const isValid = payguard.webhooks.verifySignature(req.body, signature, process.env.PAYGUARD_WEBHOOK_SECRET);
-
-  if (!isValid) {
-    return res.status(401).send("Invalid signature");
-  }
-
-  const event = JSON.parse(req.body);
-
-  switch (event.type) {
-    case "payment.approval_required":
-      sendSlackNotification(event.data);
-      break;
-    case "payment.executed":
-      updateLocalLedger(event.data);
-      break;
-    case "payment.blocked":
-      logSecurityAlert(event.data);
-      break;
-  }
-
-  res.status(200).send("OK");
-});`,
-  reconciliation: `import { PayGuard, ReconciliationWorker, PayGuardAIProvider } from "payguard";
-
-const payguard = new PayGuard({
-  razorpay: { keyId: process.env.RAZORPAY_KEY_ID, keySecret: process.env.RAZORPAY_KEY_SECRET },
-  storage: {
-    database: "mongodb",
-    connectionString: process.env.MONGO_URI,
-    collectionName: "payguard_transactions",
-  },
-  policy, // mutated in place by PUT /api/policy
+  // Optional: Omit 'ai' property to run in Mode 1 (No AI / Deterministic Rules)
   ai: new PayGuardAIProvider({
-    apiKey: process.env.PAYGUARD_API_KEY,
+    apiKey: process.env.PAYGUARD_API_KEY, // PayGuard AI API Key
   }),
 });
 
+// Register Agent Identity
+const shoppingAgent = await payguard.agent({
+  id: "shopping-agent-01",
+  name: "Autonomous E-Commerce Agent",
+  capabilities: ["e-commerce", "procurement", "payment"],
+});
+
+// Execute Secured Payment Intent
+const result = await shoppingAgent.pay({
+  amount: 8500,
+  currency: "INR",
+  merchant: { id: "merchant_electronics_01" },
+  reason: "Procurement of development hardware (Catalog price: ₹8500 INR)",
+  idempotencyKey: \`idemp_\${Date.now()}_\${Math.random().toString(36).slice(2)}\`,
+});`,
+  approvals: `// 1. Fetch pending approvals queue
+const pending = await payguard.approvals.listPending();
+
+// 2. Approve transaction (Unlocks execution & creates Razorpay Order)
+await payguard.approvals.approve(approvalId);
+
+// 3. Reject transaction (Halts execution and marks BLOCKED)
+await payguard.approvals.reject(approvalId);`,
+  webhook: `import express from "express";
+import { RazorpayWebhookHandler } from "payguard";
+
+const app = express();
+const webhookHandler = new RazorpayWebhookHandler(payguard);
+
+// NOTE: Use express.raw to preserve exact raw body buffer for signature verification
+app.post(
+  "/webhooks/razorpay",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      const signature = req.headers["x-razorpay-signature"];
+      const result = await webhookHandler.handleWebhook({
+        webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+        rawBody: req.body,
+        signature,
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+);`,
+  reconciliation: `import { ReconciliationWorker } from "payguard";
+
 const worker = new ReconciliationWorker(payguard);
 
-// Run background worker periodically
+// Run background worker periodically to sync stuck/UNKNOWN states
 setInterval(async () => {
   const summary = await worker.runReconciliation(15); // Expiry threshold in minutes
-  console.log(\`Reconciled \${summary.reconciledCount} transactions.\`);
-}, 2 * 60 * 1000); // every 2 minutes`,
+  console.log(\`Reconciled \${summary.reconciledCount} pending transactions.\`);
+}, 15 * 60 * 1000);`,
 };
-
-/* =============================================================
-   MAIN DOCUMENTATION COMPONENT
-============================================================= */
 
 export default function PayGuardDocsPage() {
   const [copied, setCopied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const copyCommand = () => {
     navigator.clipboard.writeText(codeExamples.install);
@@ -161,7 +150,6 @@ export default function PayGuardDocsPage() {
       {/* HEADER BAR */}
       <header className="sticky top-0 z-40 w-full border-b border-[#27272a] bg-[#09090b]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -175,30 +163,25 @@ export default function PayGuardDocsPage() {
                 <FiShield size={16} />
               </span>
               PayGuard
-              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#18181b] text-zinc-400 border border-[#27272a] font-normal">
-                Docs
-              </span>
+              
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
-           
-
             <a
-              href="https://github.com/sumeet57/PayGuard"
+              href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-[#18181b] transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium text-zinc-300 bg-[#18181b] border border-[#27272a] hover:bg-[#27272a] hover:text-white transition"
             >
-              <FiGithub size={16} />
+              <FiStar className="text-amber-400" size={14} />
+              <span>Star on GitHub</span>
             </a>
           </div>
-
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto flex">
-
         {/* SIDEBAR */}
         <aside
           className={`
@@ -231,33 +214,29 @@ export default function PayGuardDocsPage() {
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA */}
-        <main className="flex-1 min-w-0 px-4 sm:px-8 py-8 lg:py-10 max-w-4xl">
-
+        {/* MAIN CONTENT */}
+        <main className="flex-1 min-w-0 px-4 sm:px-8 py-8 lg:py-10 max-w-4xl space-y-12">
+          
           {/* OVERVIEW */}
-          <section id="overview" className="pb-10 border-b border-[#27272a]">
+          <section id="overview" className="pb-8 border-b border-[#27272a]">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-orange-500/20 bg-orange-500/10 font-mono text-[11px] text-orange-400 mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-              v0.1.1 Documentation
+              PayGuard Security Runtime
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-              PayGuard Runtime
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+              Agentic Payment Runtime
             </h1>
 
-            <p className="mt-4 text-base text-zinc-400 leading-relaxed max-w-2xl">
-              PayGuard acts as a deterministic security boundary and orchestration layer sitting directly 
-              between autonomous AI agents and payment gateways (like Razorpay). It prevents unauthorized agent capital flight through hard-coded policy constraints, real-time risk checks, and human approval workflows.
+            <p className="mt-3 text-sm text-zinc-400 leading-relaxed max-w-2xl">
+              An open-source security runtime layer that enables autonomous AI agents to execute transactions on Razorpay safely. Enforces deterministic spending limits, behavioral risk checks, human approval workflows, idempotency locks, and background reconciliation.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#18181b] border border-[#27272a] font-mono text-xs text-zinc-300">
                 <FiTerminal className="text-orange-500" />
                 <code>{codeExamples.install}</code>
-                <button
-                  onClick={copyCommand}
-                  className="ml-2 text-zinc-500 hover:text-white transition"
-                >
+                <button onClick={copyCommand} className="ml-2 text-zinc-500 hover:text-white transition">
                   {copied ? <FiCheck className="text-green-500" /> : <FiCopy />}
                 </button>
               </div>
@@ -272,288 +251,231 @@ export default function PayGuardDocsPage() {
                 <FiExternalLink size={13} />
               </a>
 
-              {/* get api key naviagte toi /dashboard */}
               <button
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => navigate("/dashboard")}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold text-white bg-blue-500 hover:bg-blue-600 transition"
               >
-                Get API Key
+                <FiKey size={13} />
+                Get API Key for PayGuard AI
               </button>
             </div>
           </section>
 
-          {/* ARCHITECTURE DIAGRAM */}
-          <section id="architecture" className="py-10 border-b border-[#27272a]">
+          {/* GET API KEY INSTRUCTIONS */}
+          <section id="get-api-key" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-4">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-blue-400 font-medium">
+                PayGuard Intelligence
+              </span>
+              <h2 className="text-2xl font-bold text-white mt-1">Get an API Key</h2>
+              <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                To enable Mode 3 (PayGuard AI behavioral risk checks), obtain a free API key from the dashboard. Every account gets <strong className="text-white">100 free requests</strong> to test risk evaluation.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-[#27272a] bg-[#121215] space-y-4">
+              <ol className="list-decimal list-inside text-xs text-zinc-300 space-y-2.5 font-mono">
+                <li>Click the <strong className="text-blue-400">Get API Key</strong> button below to go to the dashboard.</li>
+                <li>Create an account or sign in to your PayGuard developer portal.</li>
+                <li>Click <strong className="text-white">"Create API Key"</strong> in your API settings tab.</li>
+                <li>Copy your key and set it as <code className="text-orange-400">PAYGUARD_API_KEY</code> in your environment variables.</li>
+              </ol>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold text-white bg-blue-500 hover:bg-blue-600 transition"
+                >
+                  <FiKey size={13} />
+                  Go to Dashboard & Get Key
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* ARCHITECTURE FLOW */}
+          <section id="architecture" className="pb-8 border-b border-[#27272a]">
             <div className="mb-6">
               <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
                 Execution Pipeline
               </span>
               <h2 className="text-2xl font-bold text-white mt-1">Architecture Flow</h2>
-              <p className="mt-2 text-sm text-zinc-400">
-                A single control plane where payment requests are intercepted, evaluated against business rules, and conditionally authorized.
-              </p>
             </div>
 
-            <div className="rounded-xl border border-[#27272a] bg-[#121215] p-6 sm:p-8 space-y-4">
-              
-              {/* Step 1: Agent Request */}
-              <div className="flex items-center gap-4 p-3.5 rounded-lg border border-[#27272a] bg-[#18181b]">
-                <div className="w-10 h-10 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20 flex items-center justify-center shrink-0">
-                  <BsRobot size={20} />
+            {/* CORE PIPELINE */}
+            <div className="space-y-3">
+              <h3 className="font-mono text-xs text-zinc-400 uppercase tracking-wider font-semibold">Core Request Pipeline</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
+                  <div className="font-mono text-[10px] text-orange-500 font-bold uppercase mb-1">Step 1</div>
+                  <h4 className="text-sm font-bold text-white mb-1">Payment Intent</h4>
+                  <p className="text-xs text-zinc-400">Agent calls <code className="text-orange-400 font-mono">agent.pay()</code> with amount, merchant, and context.</p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">1. Autonomous AI Agent</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">Issues payment intent with payload (amount, merchant, idempotencyKey)</p>
+
+                <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/5">
+                  <div className="font-mono text-[10px] text-orange-400 font-bold uppercase mb-1">Step 2</div>
+                  <h4 className="text-sm font-bold text-orange-400 mb-1">PayGuard Security Check</h4>
+                  <p className="text-xs text-zinc-300">Evaluates hard spending rules and runs contextual AI risk analysis.</p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
+                  <div className="font-mono text-[10px] text-blue-400 font-bold uppercase mb-1">Step 3</div>
+                  <h4 className="text-sm font-bold text-white mb-1">Razorpay Gateway</h4>
+                  <p className="text-xs text-zinc-400">Creates Razorpay order upon valid authorization.</p>
                 </div>
               </div>
+            </div>
 
-              {/* Connecting Arrow */}
-              <div className="flex justify-center my-1">
-                <div className="w-0.5 h-6 bg-orange-500/40 relative">
-                  <div className="absolute -bottom-1 -left-[3px] border-x-4 border-x-transparent border-t-4 border-t-orange-500/60" />
-                </div>
-              </div>
-
-              {/* Step 2: PayGuard Engine */}
-              <div className="flex items-center gap-4 p-3.5 rounded-lg border border-orange-500/30 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.05)]">
-                <div className="w-10 h-10 rounded-md bg-orange-500 text-black flex items-center justify-center shrink-0 font-bold">
-                  <FiShield size={20} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-orange-400 uppercase tracking-wider font-mono">2. PayGuard Runtime</h4>
-                  <p className="text-xs text-zinc-300 mt-0.5">Evaluates policy rules, idempotency cache, agent scopes, & risk parameters</p>
-                </div>
-              </div>
-
-              {/* Connecting Branching Arrow */}
-              <div className="flex justify-center my-1">
-                <div className="w-0.5 h-6 bg-orange-500/40 relative">
-                  <div className="absolute -bottom-1 -left-[3px] border-x-4 border-x-transparent border-t-4 border-t-orange-500/60" />
-                </div>
-              </div>
-
-              {/* Decision Branches */}
+            {/* DECISION OUTCOMES - SEPARATED SECTION */}
+            <div className="mt-8 space-y-3">
+              <h3 className="font-mono text-xs text-zinc-400 uppercase tracking-wider font-semibold">PayGuard Decision Outcomes</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                
-                {/* Branch ALLOW */}
-                <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold font-mono text-green-400">
+                <div className="p-3.5 rounded-lg border border-green-500/20 bg-green-500/5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-green-400 mb-1">
                     <FiCheckCircle size={14} /> ALLOW
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1">Directly forwarded to Razorpay gateway execution</p>
+                  <p className="text-[11px] text-zinc-400">Passes all checks. Generates Razorpay Order instantly.</p>
                 </div>
 
-                {/* Branch APPROVAL */}
-                <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold font-mono text-amber-400">
-                    <FiClock size={14} /> APPROVAL
+                <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-amber-400 mb-1">
+                    <FiClock size={14} /> REQUIRE_APPROVAL
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1">Halted in pending state; triggers human webhook notification</p>
+                  <p className="text-[11px] text-zinc-400">Exceeds soft threshold. Pauses and waits for human operator.</p>
                 </div>
 
-                {/* Branch BLOCK */}
-                <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/5 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold font-mono text-red-400">
+                <div className="p-3.5 rounded-lg border border-red-500/20 bg-red-500/5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-red-400 mb-1">
                     <FiXCircle size={14} /> BLOCK
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1">Execution rejected immediately with security exception log</p>
-                </div>
-
-              </div>
-
-              {/* Connecting Arrow */}
-              <div className="flex justify-center my-1">
-                <div className="w-0.5 h-6 bg-zinc-700 relative">
-                  <div className="absolute -bottom-1 -left-[3px] border-x-4 border-x-transparent border-t-4 border-t-zinc-500" />
+                  <p className="text-[11px] text-zinc-400">Violates hard limits. Stops transaction before reaching gateway.</p>
                 </div>
               </div>
-
-              {/* Step 3: Gateway */}
-              <div className="flex items-center gap-4 p-3.5 rounded-lg border border-[#27272a] bg-[#18181b]">
-                <div className="w-10 h-10 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <BsCreditCard2Front size={20} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono">3. Razorpay Gateway</h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">Executes actual fund movement upon valid authorization</p>
-                </div>
-              </div>
-
             </div>
           </section>
 
           {/* QUICK START CODE */}
-          <section id="quick-start" className="py-10 border-b border-[#27272a]">
-            <div className="mb-6">
+          <section id="quick-start" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-4">
               <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
-                Integration Guide
+                Integration
               </span>
               <h2 className="text-2xl font-bold text-white mt-1">Quick Start</h2>
-              <p className="mt-2 text-sm text-zinc-400">
-                Initialize the runtime with your gateway secrets and database string, attach a policy, and register your agent.
-              </p>
             </div>
 
             <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden">
-              <div className="px-4 py-2.5 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between">
-                <span className="font-mono text-xs text-zinc-400">server.ts</span>
-                <span className="font-mono text-[10px] text-zinc-500">TypeScript</span>
+              <div className="px-4 py-2 bg-[#18181b] border-b border-[#27272a] flex items-center justify-between font-mono text-xs text-zinc-400">
+                <span>server.js</span>
+                <span className="text-[10px] text-zinc-500">Node.js</span>
               </div>
-              <pre className="p-4 text-xs sm:text-sm font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+              <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
                 <code>{codeExamples.init}</code>
               </pre>
             </div>
           </section>
 
-          {/* FEATURE 1: POLICY ENGINE */}
-          <section id="policies" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
+          {/* POLICY ENGINE */}
+          <section id="policies" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
               <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
                 Deterministic Security
               </span>
-              <h2 className="text-2xl font-bold text-white mt-1">Policy Rules Engine</h2>
+              <h2 className="text-2xl font-bold text-white mt-1">Policy Engine</h2>
             </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              PayGuard enforces strict non-bypassable constraints. When an agent requests a payment, the policy engine verifies the request against hard limits before triggering LLM evaluations.
-            </p>
             
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4 mt-4">
               <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase">Max Transaction Cap</h3>
-                <p className="text-xs text-zinc-400 mt-1">Hard ceilings on individual payments. Any request exceeding this limit is immediately blocked with zero gateway contact.</p>
+                <h3 className="text-xs font-bold text-white font-mono uppercase">maxTransactionAmount</h3>
+                <p className="text-xs text-zinc-400 mt-1">Hard spending cap in INR. Purchases above this value trigger an immediate BLOCK decision.</p>
               </div>
 
               <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase">Merchant Whitelisting</h3>
-                <p className="text-xs text-zinc-400 mt-1">Restrict agents to pre-approved merchant IDs, preventing money transfers to unverified endpoints.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase">Velocity Limits</h3>
-                <p className="text-xs text-zinc-400 mt-1">Specify maximum allowable aggregate spend within hourly or daily sliding windows.</p>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase">Currency Guardrails</h3>
-                <p className="text-xs text-zinc-400 mt-1">Enforce allowed ISO currency codes to avoid cross-currency conversion exploits.</p>
+                <h3 className="text-xs font-bold text-white font-mono uppercase">requireApprovalAbove</h3>
+                <p className="text-xs text-zinc-400 mt-1">Soft review limit in INR. Purchases between this value and max limit go to human approval.</p>
               </div>
             </div>
           </section>
 
-          {/* FEATURE 2: HUMAN APPROVALS */}
-          <section id="approvals" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
+          {/* HUMAN APPROVALS */}
+          <section id="approvals" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
               <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
                 Human-In-The-Loop
               </span>
-              <h2 className="text-2xl font-bold text-white mt-1">Human Approval Workflows</h2>
+              <h2 className="text-2xl font-bold text-white mt-1">Human Approval Workflow</h2>
             </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              High-value or ambiguous transactions shouldn't execute automatically. Setting <code className="text-orange-400 font-mono">requireApprovalAbove</code> pauses payments and emits an authorization ticket.
-            </p>
 
-            <div className="p-5 rounded-xl border border-[#27272a] bg-[#121215] space-y-3">
-              <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-[#27272a] pb-2">
-                <span>Approval Flow Lifecycle</span>
-                <span className="text-amber-400">STATUS: PENDING_HUMAN_REVIEW</span>
-              </div>
-              <ol className="list-decimal list-inside text-xs text-zinc-300 space-y-2 leading-relaxed">
-                <li>Agent submits a payment request exceeding the instant-execution threshold.</li>
-                <li>PayGuard creates a pending payment intent record and generates a signed approval payload.</li>
-                <li>A webhook notification fires to your admin application, Slack bot, or internal dashboard.</li>
-                <li>An authorized admin calls <code className="text-orange-400 font-mono">payguard.approvals.approve(intentId)</code> or rejects the request.</li>
-                <li>Upon approval, PayGuard unlocks the intent and sends it to Razorpay for processing.</li>
-              </ol>
-            </div>
-          </section>
-
-          {/* FEATURE 3: INTELLIGENCE MODES */}
-          <section id="modes" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
-                Flexibility
-              </span>
-              <h2 className="text-2xl font-bold text-white mt-1">Supported Intelligence Modes</h2>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-              PayGuard allows choosing how secondary risk evaluations are calculated. The engine stays independent of individual LLM providers.
-            </p>
-
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215] flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-white">No AI Mode</h3>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#18181b] text-zinc-400 border border-[#27272a]">
-                      Deterministic
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">Zero reliance on LLMs. Pure, high-speed rule-based evaluation suitable for low-latency pipelines.</p>
-                </div>
-                <code className="mt-4 font-mono text-[10px] text-orange-400">mode: "NO_AI"</code>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215] flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-white">Developer AI</h3>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#18181b] text-zinc-400 border border-[#27272a]">
-                      BYO Credentials
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">Pass your own OpenAI, Anthropic, or custom endpoint credentials with tailored prompts.</p>
-                </div>
-                <code className="mt-4 font-mono text-[10px] text-orange-400">mode: "BYO_AI"</code>
-              </div>
-
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215] flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-white">Managed AI</h3>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#18181b] text-zinc-400 border border-[#27272a]">
-                      Turnkey
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">Managed investigation and anomaly detection directly backed by PayGuard Intelligence engines.</p>
-                </div>
-                <code className="mt-4 font-mono text-[10px] text-orange-400">mode: "PAYGUARD_INTELLIGENCE"</code>
-              </div>
-            </div>
-          </section>
-
-          {/* FEATURE 4: IDEMPOTENCY */}
-          <section id="idempotency" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
-                Financial Guardrails
-              </span>
-              <h2 className="text-2xl font-bold text-white mt-1">Idempotency Execution</h2>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              Autonomous agents operating inside retry loops can inadvertently trigger duplicate payments. PayGuard enforces idempotency keys at the runtime level.
-            </p>
-            <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215] space-y-2 text-xs text-zinc-300">
-              <p>• Every payment request must specify a unique <code className="text-orange-400 font-mono">idempotencyKey</code>.</p>
-              <p>• PayGuard checks state store before executing any operation.</p>
-              <p>• If an operational attempt with the same key was already processed, PayGuard returns the cached result without re-executing against Razorpay.</p>
-            </div>
-          </section>
-
-          {/* FEATURE 5: WEBHOOKS */}
-          <section id="webhooks" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
-                Event Subscriptions
-              </span>
-              <h2 className="text-2xl font-bold text-white mt-1">Webhooks & Event Handlers</h2>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              PayGuard dispatches real-time HMAC-SHA256 signed webhooks to inform backend applications of transaction state transitions.
-            </p>
-
-            <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden mb-4">
+            <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden mt-4">
               <div className="px-4 py-2 bg-[#18181b] border-b border-[#27272a] font-mono text-xs text-zinc-400">
-                webhookHandler.ts
+                approvals.js
+              </div>
+              <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                <code>{codeExamples.approvals}</code>
+              </pre>
+            </div>
+          </section>
+
+          {/* INTELLIGENCE MODES */}
+          <section id="modes" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
+                Modes
+              </span>
+              <h2 className="text-2xl font-bold text-white mt-1">3 AI Operating Modes</h2>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4 mt-4">
+              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold text-white font-mono">Mode 1: No AI</h3>
+                  <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Active</span>
+                </div>
+                <p className="text-xs text-zinc-400">Omit 'ai' property. Evaluates transactions purely on spending rules.</p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold text-white font-mono">Mode 2: BYO-AI</h3>
+                  <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">Roadmap</span>
+                </div>
+                <p className="text-xs text-zinc-400">Planned custom keys for OpenAI, Gemini, or local models.</p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold text-white font-mono">Mode 3: Managed AI</h3>
+                  <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Active</span>
+                </div>
+                <p className="text-xs text-zinc-400">Uses PayGuardAIProvider for remote behavioral risk analysis.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* IDEMPOTENCY */}
+          <section id="idempotency" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
+                Reliability
+              </span>
+              <h2 className="text-2xl font-bold text-white mt-1">Idempotency Locks</h2>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Pass a unique <code className="text-orange-400 font-mono">idempotencyKey</code> in every <code className="text-orange-400 font-mono">agent.pay()</code> call to prevent duplicate charges from retry loops.
+            </p>
+          </section>
+
+          {/* WEBHOOKS */}
+          <section id="webhooks" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
+                Events
+              </span>
+              <h2 className="text-2xl font-bold text-white mt-1">Razorpay Webhook Handler</h2>
+            </div>
+
+            <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden">
+              <div className="px-4 py-2 bg-[#18181b] border-b border-[#27272a] font-mono text-xs text-zinc-400">
+                webhookHandler.js
               </div>
               <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
                 <code>{codeExamples.webhook}</code>
@@ -561,57 +483,67 @@ export default function PayGuardDocsPage() {
             </div>
           </section>
 
-          {/* FEATURE 6: RECONCILIATION */}
-          <section id="reconciliation" className="py-10 border-b border-[#27272a]">
-            <div className="mb-4">
+          {/* RECONCILIATION */}
+          <section id="reconciliation" className="pb-8 border-b border-[#27272a]">
+            <div className="mb-3">
               <span className="font-mono text-[11px] uppercase tracking-wider text-orange-500 font-medium">
-                Auditability & Background Workers
+                Background Worker
               </span>
               <h2 className="text-2xl font-bold text-white mt-1">Reconciliation Engine</h2>
             </div>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              PayGuard provides a dedicated <code className="text-orange-400 font-mono">ReconciliationWorker</code> that periodically cleans up stale, expired transactions and synchronizes pending database states with actual gateway records.
-            </p>
 
-            <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden mb-6">
-              <div className="px-4 py-2 bg-[#18181b] border-b border-[#27272a] font-mono text-xs text-zinc-400 flex items-center justify-between">
-                <span>reconciliationWorker.ts</span>
-                <span className="text-orange-400 text-[10px]">Background Worker</span>
+            <div className="rounded-xl border border-[#27272a] bg-[#000000] overflow-hidden">
+              <div className="px-4 py-2 bg-[#18181b] border-b border-[#27272a] font-mono text-xs text-zinc-400">
+                reconciliationWorker.js
               </div>
               <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
                 <code>{codeExamples.reconciliation}</code>
               </pre>
             </div>
+          </section>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase flex items-center gap-2">
-                  <FiRefreshCw className="text-orange-500" /> Periodic State Polling
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1.5">Background execution resolves pending payment states and syncs with MongoDB collection records.</p>
+          {/* OPEN SOURCE & DEVELOPER INFO */}
+          <section className="p-6 rounded-2xl border border-[#27272a] bg-[#121215] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#27272a] pb-4">
+              <div>
+                <h3 className="text-base font-bold text-white">Open Source & Contributions</h3>
+                <p className="text-xs text-zinc-400 mt-1">
+                  PayGuard is open-source software under the MIT license. Pull requests, bug reports, and feature ideas are always welcome!
+                </p>
               </div>
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-semibold text-white bg-orange-500 hover:bg-orange-600 transition shrink-0"
+              >
+                <FiStar size={14} />
+                Star Project on GitHub
+              </a>
+            </div>
 
-              <div className="p-4 rounded-xl border border-[#27272a] bg-[#121215]">
-                <h3 className="text-xs font-bold text-white font-mono uppercase flex items-center gap-2">
-                  <FiClock className="text-orange-500" /> Expiry Threshold Enforcement
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1.5">Automatically handles unapproved or hung authorization requests exceeding configured timeout thresholds.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono text-zinc-400 pt-1">
+              <div className="flex items-center gap-2">
+                <FiUser className="text-orange-500" />
+                <span>Created by <strong className="text-white">Sumeet</strong></span>
+              </div>
+              <div className="flex items-center gap-4">
+                <a href={PORTFOLIO_URL} target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
+                  <FiExternalLink size={12} /> sumeet.app
+                </a>
+                <a href="https://github.com/sumeet57" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
+                  <FiGithub size={12} /> @sumeet57
+                </a>
               </div>
             </div>
           </section>
 
           {/* FOOTER */}
-          <footer className="pt-10 pb-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500">
-            <div>
-              PayGuard Runtime v0.1.1 &bull; Open-Source Documentation
-            </div>
+          <footer className="pt-6 pb-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500">
+            <div>PayGuard Core &bull; MIT License</div>
             <div className="flex items-center gap-4">
-              <a href={PLAYGROUND_URL} target="_blank" rel="noreferrer" className="hover:text-zinc-300">
-                Playground
-              </a>
-              <a href="https://github.com/sumeet57/PayGuard" target="_blank" rel="noreferrer" className="hover:text-zinc-300">
-                GitHub Repository
-              </a>
+              <a href={PLAYGROUND_URL} target="_blank" rel="noreferrer" className="hover:text-zinc-300">Playground</a>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-zinc-300">GitHub</a>
             </div>
           </footer>
 

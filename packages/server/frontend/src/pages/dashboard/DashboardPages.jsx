@@ -5,6 +5,7 @@ import { FiPlus, FiTrash2, FiCopy, FiCheckCircle, FiBook, FiLogOut } from 'react
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
 import { keyAPI } from '../../api/services'
+import AuthPage from '../auth/AuthPages'
 
 /* =============================================================
    LOCAL INLINE UI COMPONENTS (No external UI imports)
@@ -150,9 +151,22 @@ export function DashboardPages() {
   if (!isAuthenticated) {
     window.location.href = '/auth'
   }
+  if(!isAuthenticated) {
+    return (
+      <>
+      
+      <p className="text-center text-sm text-muted mt-10">
+        
+        You are not logged in. Please <Link to="/auth" className="text-blue-500 hover:underline">sign in</Link> to access the dashboard.
+        </p>
+      </>
+    )
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 max-w-7xl mx-auto py-4 px-4 sm:px-6">
+    <>
+    {isAuthenticated && (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10 max-w-7xl mx-auto py-4 px-4 sm:px-6">
       
       {/* TOP NAVBAR TOOLBAR */}
       <div className="flex items-center justify-between pb-6 border-b border-surface">
@@ -320,5 +334,7 @@ export function DashboardPages() {
       </section>
 
     </motion.div>
+    )}
+    </>
   )
 }
