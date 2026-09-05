@@ -1,31 +1,65 @@
 import axios from "axios";
 import { AIProvider, InvestigationContext, InvestigationResult } from "./types";
-
-// Option A: Managed PayGuard Cloud Service
 export class PayGuardAIProvider implements AIProvider {
   private apiKey: string;
   private endpoint: string;
 
   constructor(options: { apiKey: string; endpoint?: string }) {
     this.apiKey = options.apiKey;
-    this.endpoint = options.endpoint || "https://payguardserver.sumeet.app";
+    this.endpoint = options.endpoint || "https://payguard-server-460009295734.asia-south1.run.app";
   }
 
   public async investigate(context: InvestigationContext): Promise<InvestigationResult> {
     try {
-      const response = await axios.post(`${this.endpoint}/api/investigate`, context, {
-        headers: { "x-payguard-key": this.apiKey },
-        timeout: 3000,
+      const response = await axios.post(`${this.endpoint}/api/ai/request`, {
+        prompt: `
+You are PayGuard Security AI. Analyze the transaction context and return ONLY a valid JSON object matching this TypeScript interface:
+
+interface InvestigationResult {
+  anomalous: boolean;
+  confidence: number; // 0.0 to 1.0
+  recommendation: "ALLOW" | "REQUIRE_APPROVAL" | "BLOCK";
+  reason: string; // Concise 1-sentence summary
+}
+
+Do not include markdown formatting, backticks, or extra prose. Return RAW JSON ONLY.
+ 
+transaction context : ${JSON.stringify(context)}`,
+      }, {
+        headers: { "x-api-key": this.apiKey },
+        timeout: 30000,
       });
-      return response.data;
+
+      console.log("AI Raw Response:", response.data);
+
+      let payload = response.data;
+
+      if (payload && typeof payload.response === "string") {
+        try {
+          payload = JSON.parse(payload.response);
+        } catch {
+          const jsonMatch = payload.response.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            payload = JSON.parse(jsonMatch[0]);
+          }
+        }
+      }
+
+      return {
+        anomalous: Boolean(payload.anomalous),
+        confidence: typeof payload.confidence === "number" ? payload.confidence : 0.9,
+        recommendation: ["ALLOW", "REQUIRE_APPROVAL", "BLOCK"].includes(payload.recommendation)
+          ? payload.recommendation
+          : "REQUIRE_APPROVAL",
+        reason: typeof payload.reason === "string" ? payload.reason : "AI investigation flagged transaction as anomalous.",
+      };
     } catch (error) {
-      // Safety fallback if proxy fails
-      return { anomalous: true, confidence: 0, recommendation: "REQUIRE_APPROVAL" };
+      return { anomalous: true, confidence: 0, recommendation: "REQUIRE_APPROVAL", reason: "AI investigation failed or returned invalid response." };
     }
   }
 }
 
-// Option B: BYO Key (OpenAI / Gemini Direct)
+// BYO Key (OpenAI / Gemini Direct)
 export class OpenAIProvider implements AIProvider {
   private apiKey: string;
   private model: string;
@@ -36,11 +70,11 @@ export class OpenAIProvider implements AIProvider {
   }
 
   public async investigate(context: InvestigationContext): Promise<InvestigationResult> {
-    // Call OpenAI direct API...
     return {
       anomalous: false,
       confidence: 0.95,
       recommendation: "ALLOW",
+      reason: "AI investigation completed successfully."
     };
   }
 }

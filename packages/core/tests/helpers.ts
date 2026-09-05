@@ -12,6 +12,7 @@ export function createMockStorage(): StorageAdapter & {
   getPendingApprovals: ReturnType<typeof vi.fn>;
   updateTransactionByApprovalId: ReturnType<typeof vi.fn>;
   updateTransactionByOrderId: ReturnType<typeof vi.fn>;
+  getUnresolvedTransactions: ReturnType<typeof vi.fn>;
 } {
   return {
     connect: vi.fn().mockResolvedValue(undefined),
@@ -20,6 +21,7 @@ export function createMockStorage(): StorageAdapter & {
     getPendingApprovals: vi.fn().mockResolvedValue([]),
     updateTransactionByApprovalId: vi.fn().mockResolvedValue({}),
     updateTransactionByOrderId: vi.fn().mockResolvedValue({}),
+    getUnresolvedTransactions: vi.fn().mockResolvedValue([]),
   };
 }
 
@@ -56,7 +58,6 @@ export function buildPayGuard(
     ...overrides,
   });
 
-  // Swap the real MongoAdapter created internally for our mock.
   payguard.storageConfig = storage;
   return payguard;
 }

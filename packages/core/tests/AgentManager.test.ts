@@ -73,7 +73,7 @@ describe("AgentManager.pay — Razorpay & Gateway Failure Handling", () => {
 
       const payPromise = agent.pay(req({ amount: 500 }));
 
-      // Advance fake timers asynchronously so microtasks resolve smoothly
+      
       await vi.advanceTimersByTimeAsync(5001);
 
       const result = await payPromise;

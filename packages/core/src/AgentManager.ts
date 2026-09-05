@@ -91,6 +91,7 @@ export class AgentManager {
         const aiResult = await this.payguard.aiProvider.investigate(context);
 
         if (aiResult.recommendation === "BLOCK") {
+          const reason = aiResult.reason || "AI investigation flagged transaction as severe behavioral anomaly.";
           if (storage) {
             await storage.saveTransaction({
               transactionId,
@@ -98,18 +99,19 @@ export class AgentManager {
               amount: request.amount,
               status: "BLOCKED",
               decision: "BLOCK",
-              reason: "AI investigation flagged transaction as severe behavioral anomaly."
+              reason
             });
           }
           return {
             decision: "BLOCK",
             transactionId,
             status: "BLOCKED",
-            reason: "AI investigation flagged transaction as severe behavioral anomaly."
+            reason,
           };
         }
 
         if (aiResult.recommendation === "REQUIRE_APPROVAL") {
+          const reason = aiResult.reason || "AI investigation flagged ambiguous behavior requiring human review.";
           const approvalId = `apr_${Date.now()}`;
           if (storage) {
             await storage.saveTransaction({
@@ -119,7 +121,7 @@ export class AgentManager {
               amount: request.amount,
               status: "WAITING_FOR_APPROVAL",
               decision: "REQUIRE_APPROVAL",
-              reason: "AI investigation flagged ambiguous behavior requiring human review."
+              reason
             });
           }
           return {
@@ -127,7 +129,7 @@ export class AgentManager {
             transactionId,
             approvalId,
             status: "WAITING_FOR_APPROVAL",
-            reason: "AI investigation flagged ambiguous behavior requiring human review."
+            reason
           };
         }
       }

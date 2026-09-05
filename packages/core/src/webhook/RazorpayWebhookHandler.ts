@@ -23,7 +23,7 @@ export class RazorpayWebhookHandler {
   const expectedBuffer = Buffer.from(expectedSignature);
   const signatureBuffer = Buffer.from(signature);
 
-  // Return false if byte lengths differ instead of letting timingSafeEqual throw a RangeError
+
   if (expectedBuffer.length !== signatureBuffer.length) {
     return false;
   }

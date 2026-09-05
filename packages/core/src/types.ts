@@ -26,6 +26,7 @@ export interface StorageAdapter {
   getPendingApprovals(): Promise<any[]>;
   updateTransactionByApprovalId(approvalId: string, status: string, reason?: string): Promise<any>;
   updateTransactionByOrderId(orderId: string, status: string): Promise<any>;
+  getUnresolvedTransactions(): Promise<any[]>;
 }
 export interface InvestigationContext {
   agentId: string;
@@ -39,6 +40,7 @@ export interface InvestigationResult {
   anomalous: boolean;
   confidence: number;
   recommendation: "ALLOW" | "REQUIRE_APPROVAL" | "BLOCK";
+  reason: string;
 }
 
 // Clean Interface: No constructor hacks inside interface

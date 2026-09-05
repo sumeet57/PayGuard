@@ -34,7 +34,12 @@ describe("PayGuard", () => {
 
   it("stores the supplied aiProvider when provided", () => {
     const ai = {
-      investigate: async () => ({ anomalous: false, confidence: 1, recommendation: "ALLOW" as const }),
+      investigate: async () => ({
+        anomalous: false,
+        confidence: 1,
+        recommendation: "ALLOW" as const,
+        reason: "No anomaly detected",
+      }),
     };
     const payguard = new PayGuard({ ...baseConfig(), ai });
     expect(payguard.aiProvider).toBe(ai);

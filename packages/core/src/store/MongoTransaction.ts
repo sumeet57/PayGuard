@@ -6,7 +6,6 @@ const transactionSchema = new mongoose.Schema({
   approvalId: String,
   agentId: { type: String, required: true },
   amount: { type: Number, required: true },
-  // ADD "UNKNOWN" AND "RECONCILED" TO THIS ENUM LIST
   status: { 
     type: String, 
     enum: [
