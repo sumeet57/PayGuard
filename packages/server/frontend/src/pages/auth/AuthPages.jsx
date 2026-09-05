@@ -21,7 +21,7 @@ function AuthLayout({ children, title, subtitle }) {
       >
         <Link to="/" className="flex justify-center mb-8">
           <span className="text-3xl font-black font-display" style={{ color: 'var(--color-text)' }}>
-            enginee<span style={{ color: 'var(--color-highlight)' }}>or</span>
+            pay<span style={{ color: 'var(--color-highlight)' }}>guard</span>
           </span>
         </Link>
 
@@ -48,7 +48,7 @@ export default function AuthPage() {
       try {
         await googleLogin(tokenResponse.access_token)
         toast.success('Welcome back!')
-        navigate(from, { replace: true })
+        navigate("/dashboard", { replace: true })
       } catch (err) {
         toast.error(err.response?.data?.message || err.message || 'Google sign-in failed')
         console.error('Backend Google Auth Error:', err)
@@ -64,8 +64,8 @@ export default function AuthPage() {
 
   return (
     <AuthLayout
-      title="Welcome to engineeor"
-      subtitle="Sign in or create an account with Google"
+      title="Welcome to payguard "
+      subtitle="Sign in or create an account with Google to get a free API key and start using the PayGuard API."
     >
       <div className="flex justify-center my-2">
         <button

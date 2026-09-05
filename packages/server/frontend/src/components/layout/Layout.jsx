@@ -14,20 +14,17 @@ export default function Layout() {
 
   return (
     <div className="noise min-h-screen flex flex-col bg-surface">
-      <Navbar />
+      {/* <Navbar /> */}
       <AnimatePresence mode="wait">
-        <motion.main
+        <main
           key={pathname}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className={`flex-1 ${!isAuthPage ? 'pt-16' : ''}`}
+          
+         
         >
           <Outlet />
-        </motion.main>
+        </main>
       </AnimatePresence>
-      {!isAuthPage && <Footer />}
+      {/* {!isAuthPage && <Footer />} */}
     </div>
   )
 }

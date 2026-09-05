@@ -11,10 +11,7 @@ import HomePage from './pages/HomePage'
 
 import AuthPage from './pages/auth/AuthPages'
 import {
-  DashboardLayout,
-  DashboardOverview,
- DashboardApiKeys,
-  DashboardProfile,
+  DashboardPages
 } from './pages/dashboard/DashboardPages'
 
 
@@ -72,11 +69,11 @@ export default function App() {
                 {/* <Route path="/auth/register" element={<RegisterPage />} /> */}
 
                 {/* Dashboard (protected inside DashboardLayout) */}
-                <Route path="/dashboard" element={<DashboardLayout />}>
-                  <Route index element={<DashboardOverview />} />
+                <Route path="/dashboard" element={<DashboardPages />}/>
+                  {/* <Route index element={<DashboardOverview />} />
                   <Route path="api-keys" element={<DashboardApiKeys />} />
                   <Route path="profile" element={<DashboardProfile />} />
-                </Route>
+                </Route> */}
               </Route>
 
               <Route path="/terms" element={<TermsAndConditions />} />
