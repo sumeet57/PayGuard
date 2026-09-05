@@ -38,14 +38,14 @@ export default function ApprovalsPanel({ razorpayKeyId }) {
       await refresh();
 
       if (action === "APPROVE") {
-        setRawResult(result.data);
-        if (!isPayable(result.data)) {
+        setRawResult(result);
+        if (!isPayable(result)) {
           setPayStatus({ type: "success", text: "Approved." });
           return;
         }
         openRazorpayCheckout({
           razorpayKeyId,
-          result: result.data,
+          result,
           description: item.reason || item.description || "Approved purchase",
           onResult: setPayStatus,
         });

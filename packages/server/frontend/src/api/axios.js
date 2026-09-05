@@ -2,7 +2,8 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: 'https://payguard-server-460009295734.asia-south1.run.app/api',
+  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
   withCredentials: true, // sends session cookie automatically
   headers: {
     'Content-Type': 'application/json',

@@ -55,7 +55,7 @@ export function openRazorpayCheckout({ razorpayKeyId, result, description, onRes
   }
 
   const rzp = new window.Razorpay({
-    key: razorpayKeyId,
+    key: result?.razorpayKeyId || result?.data?.razorpayKeyId || razorpayKeyId,
     amount: findAmountInPaise(result),
     currency: findCurrency(result),
     order_id: orderId,

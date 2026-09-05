@@ -43,7 +43,7 @@ export class MongoAdapter implements StorageAdapter {
     }
     public async getUnresolvedTransactions(): Promise<any[]> {
   return await MongoTransaction.find({
-    status: { $in: ["UNKNOWN", "EXECUTING"] },
+    status: { $in: ["UNKNOWN", "EXECUTING", "APPROVED"] },
     orderId: { $exists: true, $ne: null }
   }).exec();
 }
