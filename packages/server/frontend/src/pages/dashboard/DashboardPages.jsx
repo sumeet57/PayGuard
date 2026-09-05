@@ -148,11 +148,7 @@ export function DashboardPages() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted font-mono">Please log in to access the dashboard.</p>
-      </div>
-    )
+    window.location.href = '/auth'
   }
 
   return (
