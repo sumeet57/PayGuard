@@ -1,0 +1,21 @@
+{
+  "name": "payguard-buildathon-server",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.2.9",
+    "@langchain/google-genai": "^2.3.0",
+    "@langchain/openai": "^1.5.11",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "langchain": "^1.5.10",
+    "payguard": "^0.1.0",
+    "zod": "^3.25.76"
+  }
+}

@@ -1,0 +1,332 @@
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.masthead h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.masthead .sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.status-pill {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.status-pill.ok {
+  color: var(--safe);
+  background: var(--safe-bg);
+  border-color: transparent;
+}
+
+.status-pill.err {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-color: transparent;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.panel + .panel {
+  margin-top: 20px;
+}
+
+.panel h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.panel .hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field .amount-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.field .amount-input span {
+  padding: 10px 10px 10px 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.field .amount-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 12px 10px 4px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.field .amount-input input:focus {
+  outline: none;
+}
+
+.field .range-note {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+.btn {
+  width: 100%;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn.small {
+  width: auto;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+.inline-error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+.inline-success {
+  color: var(--safe);
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+/* Chat panel */
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 16px;
+}
+
+.bubble {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  max-width: 88%;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.bubble.agent {
+  align-self: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+}
+
+.bubble.agent.pending {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.chat-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  background: var(--paper);
+}
+
+.chat-input-row input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.chat-input-row .btn {
+  width: auto;
+  padding: 0 20px;
+}
+
+.catalog-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+.catalog-row:last-child {
+  border-bottom: none;
+}
+
+.catalog-row .price {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+/* Approvals table */
+.approvals-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.approvals-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.approvals-table td {
+  padding: 12px 8px 12px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.approvals-table td.amount {
+  font-family: var(--font-mono);
+}
+
+.approvals-table .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.approve-btn {
+  border: 1px solid var(--safe);
+  color: var(--safe);
+  background: var(--safe-bg);
+}
+
+.reject-btn {
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.empty-state {
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.badge.hold {
+  background: var(--hold-bg);
+  color: var(--hold);
+}
