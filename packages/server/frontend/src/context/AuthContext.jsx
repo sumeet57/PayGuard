@@ -54,6 +54,7 @@ export function AuthProvider({ children }) {
 
   const googleLogin = async (accessToken) => {
     const res = await authAPI.googleAuth(accessToken)
+    console.log('Google login response:', res);
     dispatch({ type: 'SET_USER', payload: res.data.user })
     return res.data
   }

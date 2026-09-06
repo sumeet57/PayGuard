@@ -48,7 +48,7 @@ export default function AuthPage() {
       try {
         await googleLogin(tokenResponse.access_token)
         toast.success('Welcome back!')
-        window.location.href = "/dashboard"
+        navigate("/dashboard");
       } catch (err) {
         toast.error(err.response?.data?.message || err.message || 'Google sign-in failed')
         console.error('Backend Google Auth Error:', err)
