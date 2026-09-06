@@ -147,18 +147,26 @@ export function DashboardPages() {
       </div>
     )
   }
-
-  if (!isAuthenticated) {
-    window.location.href = '/auth'
-  }
   if(!isAuthenticated) {
     return (
       <>
-      
-      <p className="text-center text-sm text-muted mt-10">
-        
-        You are not logged in. Please <Link to="/auth" className="text-blue-500 hover:underline">sign in</Link> to access the dashboard.
-        </p>
+        <div className="min-h-[50vh] flex items-center justify-center px-4">
+          <div className="w-full max-w-md rounded-2xl border border-surface bg-surface/30 p-8 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10 text-orange-400">
+              <FiLogOut size={22} aria-hidden="true" />
+            </div>
+            <h1 className="font-display text-xl font-bold text-primary">Sign in to continue</h1>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Access your dashboard and manage your API keys securely.
+            </p>
+            <Link
+              to="/auth"
+              className="mt-6 inline-flex items-center justify-center rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
       </>
     )
   };
