@@ -9,7 +9,7 @@ import {
 export const createApiKey = async (req, res) => {
   try {
     const { label, expirationDays } = req.body;
-    const userId = req.session.userId;
+    const userId = req.userId;
 
     if (!label) {
       return res.status(400).json({ success: false, message: "Label is required" });
@@ -30,7 +30,7 @@ export const createApiKey = async (req, res) => {
 export const getUserApiKeys = async (req, res) => {
   try {
     
-    const userId = req.session.userId;
+    const userId = req.userId;
     const keys = await getUserApiKeysService(userId);
 
     return res.status(200).json({
@@ -44,7 +44,7 @@ export const getUserApiKeys = async (req, res) => {
 
 export const deleteApiKey = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.userId;
     const { id } = req.params;
 
     await deleteApiKeyService(userId, id);
@@ -60,7 +60,7 @@ export const deleteApiKey = async (req, res) => {
 
 export const toggleApiKeyStatus = async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.userId;
     const { id } = req.params;
 
     const updatedKey = await toggleApiKeyStatusService(userId, id);

@@ -186,7 +186,9 @@ export function DashboardPages() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono border border-surface text-muted hover:text-primary hover:bg-surface-alt transition-all"
           >
             <FiBook size={14} />
-            <span>Documentation</span>
+            {
+              (window.innerWidth < 640) ? 'Docs' : 'Documentation'
+            }
           </Link>
 
           <button

@@ -2,9 +2,8 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const api = axios.create({
-  baseURL: 'https://payguard-server-460009295734.asia-south1.run.app/api',
-  // baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  withCredentials: true, // sends session cookie automatically
+  // baseURL : 'https://payguard-server-460009295734.asia-south1.run.app/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,8 +13,10 @@ const api = axios.create({
 // ─── Request Interceptor ───────────────────────────────
 api.interceptors.request.use(
   (config) => {
-    // No token needed — session cookie is sent automatically via withCredentials
-    // You can attach any custom headers here if needed in the future
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => Promise.reject(error)
@@ -26,11 +27,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
-    const message = error.response?.data?.message || error.message
 
     if (status === 401) {
-      // Session expired or not logged in
-      // Let the AuthContext handle redirection
+      localStorage.removeItem('token')
       window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     } else if (status === 403) {
       toast.error('You don\'t have permission to do that.')

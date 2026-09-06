@@ -41,4 +41,7 @@ export default {
 
   NODE_ENV:
     process.env.NODE_ENV || "development",
+  
+    JWT_SECRET:
+    process.env.JWT_SECRET || "your_jwt_secret_key_here",
 };

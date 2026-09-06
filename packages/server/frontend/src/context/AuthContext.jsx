@@ -27,11 +27,17 @@ export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
 
   const checkAuth = useCallback(async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      dispatch({ type: 'SET_USER', payload: null })
+      return
+    }
+
     try {
       const res = await authAPI.me()
-      console.log('Auth check response:', res.data) // Log the response data
       dispatch({ type: 'SET_USER', payload: res.data.user })
     } catch {
+      localStorage.removeItem('token')
       dispatch({ type: 'SET_USER', payload: null })
     }
   }, [])
@@ -42,19 +48,27 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password })
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token)
+    }
     dispatch({ type: 'SET_USER', payload: res.data.user })
     return res.data
   }
 
   const register = async (data) => {
     const res = await authAPI.register(data)
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token)
+    }
     dispatch({ type: 'SET_USER', payload: res.data.user })
     return res.data
   }
 
   const googleLogin = async (accessToken) => {
     const res = await authAPI.googleAuth(accessToken)
-    console.log('Google login response:', res);
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token)
+    }
     dispatch({ type: 'SET_USER', payload: res.data.user })
     return res.data
   }
@@ -63,6 +77,7 @@ export function AuthProvider({ children }) {
     try {
       await authAPI.logout()
     } finally {
+      localStorage.removeItem('token')
       dispatch({ type: 'LOGOUT' })
     }
   }

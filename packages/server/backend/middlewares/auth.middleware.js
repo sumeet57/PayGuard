@@ -1,11 +1,22 @@
-// src/middlewares/auth.middleware.js
-export const isAuthenticated = (req, res, next) => {
+import jwt from "jsonwebtoken";
+import env from "../config/env.js";
 
-  if (req.session && req.session.userId) {
-    
-    return next();
+export const isAuthenticated = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized. Please log in." });
   }
-  return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET);
+    req.userId = decoded.userId;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: "Session expired or invalid token. Please log in again." });
+  }
 };
 
 export const isAdmin = (req, res, next) => {
