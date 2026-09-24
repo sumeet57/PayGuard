@@ -241,28 +241,12 @@ export default function PayGuardDocsPage() {
                 </button>
               </div>
 
-              <a
-                href={PLAYGROUND_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold text-white bg-orange-500 hover:bg-orange-600 transition"
-              >
-                Launch Playground
-                <FiExternalLink size={13} />
-              </a>
-
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono font-semibold text-white bg-blue-500 hover:bg-blue-600 transition"
-              >
-                <FiKey size={13} />
-                Get API Key for PayGuard AI
-              </button>
+              
             </div>
           </section>
 
           {/* GET API KEY INSTRUCTIONS */}
-          <section id="get-api-key" className="pb-8 border-b border-[#27272a]">
+          {/* <section id="get-api-key" className="pb-8 border-b border-[#27272a]">
             <div className="mb-4">
               <span className="font-mono text-[11px] uppercase tracking-wider text-blue-400 font-medium">
                 PayGuard Intelligence
@@ -291,7 +275,7 @@ export default function PayGuardDocsPage() {
                 </button>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* ARCHITECTURE FLOW */}
           <section id="architecture" className="pb-8 border-b border-[#27272a]">

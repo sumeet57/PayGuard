@@ -9,20 +9,20 @@ import Layout from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 
 
-import AuthPage from './pages/auth/AuthPages'
-import {
-  DashboardPages
-} from './pages/dashboard/DashboardPages'
+// import AuthPage from './pages/auth/AuthPages'
+// import {
+//   DashboardPages
+// } from './pages/dashboard/DashboardPages'
 
 
-// oauth2 imports
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import TermsAndConditions from './pages/policies/TermsAndConditions'
-import PrivacyStatement from './pages/policies/PrivacyStatement'
-import RefundPolicy from './pages/policies/RefundPolicy'
-import Contact from './pages/policies/Contact'
-import Shipping from './pages/policies/Shipping'
-import About from './pages/policies/About'
+// // oauth2 imports
+// import { GoogleOAuthProvider } from '@react-oauth/google'
+// import TermsAndConditions from './pages/policies/TermsAndConditions'
+// import PrivacyStatement from './pages/policies/PrivacyStatement'
+// import RefundPolicy from './pages/policies/RefundPolicy'
+// import Contact from './pages/policies/Contact'
+// import Shipping from './pages/policies/Shipping'
+// import About from './pages/policies/About'
 
 function ToastWrapper() {
   const { isDark } = useTheme()
@@ -52,41 +52,24 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-    
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                {/* Public */}
-                <Route path="/" element={<HomePage />} />
-                
 
-                {/* Auth */}
-                <Route path="/auth" element={
-                  <GoogleOAuthProvider clientId={clientid}>
-                    <AuthPage />
-                  </GoogleOAuthProvider>
-                } />
-                {/* <Route path="/auth/register" element={<RegisterPage />} /> */}
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              {/* Public */}
+              <Route path="/" element={<HomePage />} />
 
-                {/* Dashboard (protected inside DashboardLayout) */}
-                <Route path="/dashboard" element={<DashboardPages />}/>
-                  {/* <Route index element={<DashboardOverview />} />
-                  <Route path="api-keys" element={<DashboardApiKeys />} />
-                  <Route path="profile" element={<DashboardProfile />} />
-                </Route> */}
-              </Route>
 
-              <Route path="/terms" element={<TermsAndConditions />} />
-              <Route path="/privacy" element={<PrivacyStatement />} />
-              <Route path="/refund" element={<RefundPolicy />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/shipping" element={<Shipping />} />
-            </Routes>
-            <ToastWrapper />
-          </BrowserRouter>
+
+              <Route path="*" element={<HomePage />} />
+            </Route>
+
+
+          </Routes>
+          <ToastWrapper />
+        </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
-    
+
   )
 }
