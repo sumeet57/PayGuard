@@ -84,6 +84,9 @@ function logError(name: string, error: unknown): void {
 }
 
 // Provider that talks to the hosted PayGuard server
+/*
+now this hosted server is shutdown, so this provider is deprecated. Use OpenAIProvider or GeminiProvider instead.
+*/
 export class PayGuardAIProvider implements AIProvider {
   private apiKey: string;
   private endpoint: string;
@@ -123,6 +126,9 @@ export class PayGuardAIProvider implements AIProvider {
 }
 
 // Provider that calls OpenAI directly with the user's own key
+
+
+
 export class OpenAIProvider implements AIProvider {
   private apiKey: string;
   private model: string;
@@ -208,6 +214,50 @@ export class GeminiProvider implements AIProvider {
       return toResult(parseJson(text));
     } catch (error) {
       logError("Gemini", error);
+      return failedResult();
+    }
+  }
+}
+
+export class deepseekAIProvider implements AIProvider {
+  private apiKey: string;
+  private model: string;
+
+  constructor(options: { apiKey: string; model?: string }) {
+    if (!options.apiKey) throw new Error("deepseekAIProvider: apiKey is required");
+    this.apiKey = options.apiKey;
+    this.model = options.model || "deepseek-chat";
+  }
+
+  // Asks the Deepseek API to review the transaction
+  public async investigate(context: InvestigationContext): Promise<InvestigationResult> {
+    try {
+      const response = await axios.post(
+        "https://api.deepseek.com/chat/completions",
+        {
+          model: this.model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: INSTRUCTIONS },
+            { role: "user", content: contextPrompt(context) },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 50000,
+        }
+      );
+
+      const content = response.data?.choices?.[0]?.message?.content;
+      if (typeof content !== "string") return failedResult();
+
+      return toResult(parseJson(content));
+    } catch (error) {
+      logError("DeepSeek", error);
       return failedResult();
     }
   }
